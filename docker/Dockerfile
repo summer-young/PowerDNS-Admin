@@ -1,67 +1,67 @@
-发件人阿尔卑斯山：3.17AS公司建设者
-ARG公司GOARCH=adm64
-ARG公司BUILD_DEPENDENCIES= &#34;b条u个我我d日 -b条一秒e（电子） \
-我我b条（f）（f）我 -d日e（电子）v（v） \
-我我b条第页q个 -d日e（电子）v（v） \
-我我b条x个米我2 -d日e（电子）v（v） \
-米一第页我一d日b条 -c（c）o个n个n个e（电子）c（c）t吨o个第页 -c（c） -d日e（电子）v（v） \
-o个第页e（电子）n个我d日一第页 -d日e（电子）v（v） \
-第页年t吨小时o个n个3 -d日e（电子）v（v） \
-x个米我秒e（电子）c（c） -d日e（电子）v（v） \
-n个第页米 \
-年一第页n个 \
-c（c）一第页克o个 &#34;
+FROM alpine:3.17 AS builder
+
+ARG BUILD_DEPENDENCIES="build-base \
+    libffi-dev \
+    libpq-dev \
+    libxml2-dev \
+    mariadb-connector-c-dev \
+    openldap-dev \
+    python3-dev \
+    xmlsec-dev \
+    npm \
+    yarn \
+    cargo"
 
 ENV LC_ALL=en_US.UTF-8 \
-LANG=en_US.UTF-8 \
-LANGUAGE=en_US.UTF-8 \
-FLASK_APP=/build/powerdnsadmin/__init__.py
+    LANG=en_US.UTF-8 \
+    LANGUAGE=en_US.UTF-8 \
+    FLASK_APP=/build/powerdnsadmin/__init__.py
 
-#获取依赖项
-#py3-pip不应属于BUILD_DEPENDENCIES。否则，当我们删除
-#它们在构建阶段的末尾使用“apk-del”，python请求模块
-#也将被删除-（用alpine:3.12和python 3.8.5测试）。
-RUN（运行）apk add--无缓存${BUILD_DEPENDENCIES}&#38;&#38;\
-apk add--无缓存py3-pip
+# Get dependencies
+# py3-pip should not belong to BUILD_DEPENDENCIES. Otherwise, when we remove
+# them with "apk del" at the end of build stage, the python requests module
+# will be removed as well - (Tested with alpine:3.12 and python 3.8.5).
+RUN apk add --no-cache ${BUILD_DEPENDENCIES} && \
+    apk add --no-cache py3-pip
 
- 工作总监/建造
+WORKDIR /build
 
-#我们首先复制requirements.txt以利用Docker缓存
-副本./requirements.txt/build/requires.txt
+# We copy just the requirements.txt first to leverage Docker cache
+COPY ./requirements.txt /build/requirements.txt
 
-#获取应用程序依赖项
-RUN（运行）pip安装--升级pip&#38;&#38;\
-pip安装--使用-pep517-r requirements.txt
+# Get application dependencies
+RUN pip install --upgrade pip && \
+    pip install --use-pep517 -r requirements.txt
 
-#添加源
-副本./内部版本
+# Add sources
+COPY . /build
 
-#准备资产
-RUN（运行）纱线安装--pure-lockfile--生产&#38;&#38;\
-纱线缓存清理\
-sed-i-r-e &#34;秒 | &#39;第页c（c）秒秒米我n个 &#39; ,\秒 ? &#39;c（c）秒秒第页e（电子）w个第页我t吨e（电子） &#39; | &#39;第页c（c）秒秒米我n个 &#39; |克 &#34;/build/powerdnsadmin/assets.py&#38;&#38;\
-烧瓶资产构建
+# Prepare assets
+RUN yarn install --pure-lockfile --production && \
+    yarn cache clean && \
+    sed -i -r -e "s|'rcssmin',\s?'cssrewrite'|'rcssmin'|g" /build/powerdnsadmin/assets.py && \
+    flask assets build
 
-RUN（运行）mv/build/powerdnsadmin/static/tmp/static&#38;&#38;\
-mkdir/build/powerdnsadmin/static&#38;&#38;\
-cp-r/tmp/static/generated/build/powerdnsadmin/static&#38;&#38;\
-cp-r/tmp/static/assets/build/powerdnsadmin/static&#38;&#38;\
-cp-r/tmp/static/img/build/powerdnsadmin/static&#38;&#38;\
-查找/tmp/static/nodemodules-名称 &#39;w个e（电子）b条（f）o个n个t吨秒 &#39;-exec cp-r{}/build/powerdnsadmin/static\；&#38;&#38;\
-查找/tmp/static/nodemodules-名称 &#39;（f）o个n个t吨秒 &#39;-exec cp-r{}/build/powerdnsadmin/static\；&#38;&#38;\
-查找/tmp/static/nodemodules/icheck/skins/square-名称 &#39; * .第页n个克 &#39;-exec-cp{}/build/powerdnsadmin/static/generated\；
+RUN mv /build/powerdnsadmin/static /tmp/static && \
+    mkdir /build/powerdnsadmin/static && \
+    cp -r /tmp/static/generated /build/powerdnsadmin/static && \
+    cp -r /tmp/static/assets /build/powerdnsadmin/static && \
+    cp -r /tmp/static/img /build/powerdnsadmin/static && \
+    find /tmp/static/node_modules -name 'webfonts' -exec cp -r {} /build/powerdnsadmin/static \; && \
+    find /tmp/static/node_modules -name 'fonts' -exec cp -r {} /build/powerdnsadmin/static \; && \
+    find /tmp/static/node_modules/icheck/skins/square -name '*.png' -exec cp {} /build/powerdnsadmin/static/generated \;
 
-RUN（运行） { \
-回声 &#34;（f）第页o个米（f）我一秒k个 _一秒秒e（电子）t吨秒我米第页o个第页t吨E类n个v（v）我第页o个n个米e（电子）n个t吨 &#34; ; \
-回声 &#34;一秒秒e（电子）t吨秒=E类n个v（v）我第页o个n个米e（电子）n个t吨 ( ) &#34; ; \
-回声 &#34;一秒秒e（电子）t吨秒 .第页e（电子）克我秒t吨e（电子）第页 ( &#39;j个秒 _我o个克我n个 &#39; , &#39;克e（电子）n个e（电子）第页一t吨e（电子）d日 /我o个克我n个 .j个秒 &#39; ) &#34; ; \
-回声 &#34;一秒秒e（电子）t吨秒 .第页e（电子）克我秒t吨e（电子）第页 ( &#39;j个秒 _v（v）一我我d日一t吨我o个n个 &#39; , &#39;克e（电子）n个e（电子）第页一t吨e（电子）d日 /v（v）一我我d日一t吨我o个n个 .j个秒 &#39; ) &#34; ; \
-回声 &#34;一秒秒e（电子）t吨秒 .第页e（电子）克我秒t吨e（电子）第页 ( &#39;c（c）秒秒 _我o个克我n个 &#39; , &#39;克e（电子）n个e（电子）第页一t吨e（电子）d日 /我o个克我n个 .c（c）秒秒 &#39; ) &#34; ; \
-回声 &#34;一秒秒e（电子）t吨秒 .第页e（电子）克我秒t吨e（电子）第页 ( &#39;j个秒 _米一我n个 &#39; , &#39;克e（电子）n个e（电子）第页一t吨e（电子）d日 /米一我n个 .j个秒 &#39; ) &#34; ; \
-回声 &#34;一秒秒e（电子）t吨秒 .第页e（电子）克我秒t吨e（电子）第页 ( &#39;c（c）秒秒 _米一我n个 &#39; , &#39;克e（电子）n个e（电子）第页一t吨e（电子）d日 /米一我n个 .c（c）秒秒 &#39; ) &#34; ; \
-}&#62;/build/powerdnsadmin/assets.py
+RUN { \
+      echo "from flask_assets import Environment"; \
+      echo "assets = Environment()"; \
+      echo "assets.register('js_login', 'generated/login.js')"; \
+      echo "assets.register('js_validation', 'generated/validation.js')"; \
+      echo "assets.register('css_login', 'generated/login.css')"; \
+      echo "assets.register('js_main', 'generated/main.js')"; \
+      echo "assets.register('css_main', 'generated/main.css')"; \
+    } > /build/powerdnsadmin/assets.py
 
-#移动应用程序
+# Move application
 RUN mkdir -p /app && \
     cp -r /build/migrations/ /build/powerdnsadmin/ /build/run.py /app && \
     mkdir -p /app/configs && \
