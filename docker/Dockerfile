@@ -1,5 +1,5 @@
 FROM alpine:3.17 AS builder
-
+ARG GOARCH=adm64
 ARG BUILD_DEPENDENCIES="build-base \
     libffi-dev \
     libpq-dev \
