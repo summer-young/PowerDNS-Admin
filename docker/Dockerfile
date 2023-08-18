@@ -93,5 +93,5 @@ RUN chown ${USER}:${USER} ./configs /app && \
 EXPOSE 80/tcp
 USER ${USER}
 HEALTHCHECK CMD ["wget","--output-document=-","--quiet","--tries=1","http://127.0.0.1/"]
-ENTRYPOINT ["entrypoint.sh"]
+ENTRYPOINT ["docker/entrypoint.sh"]
 CMD ["gunicorn","powerdnsadmin:create_app()"]
